@@ -44,6 +44,7 @@ function setupPerson(person) {
     };
     person.append(deleteBtn);
     person.addEventListener("touchstart", e => {
+        e.preventDefault();
         touchItem = person;
         const rect = person.getBoundingClientRect();
         offsetX = e.touches[0].clientX - rect.left;
@@ -61,7 +62,6 @@ function setupPerson(person) {
 
     person.addEventListener("touchend", e => {
         if (!touchItem) return;
-
         touchItem.style.position = "static";
         touchItem.style.zIndex = "";
 
@@ -115,3 +115,4 @@ function addPeople() {
     setupPerson(person);
     document.getElementById("unemployed").append(person);
 }
+
