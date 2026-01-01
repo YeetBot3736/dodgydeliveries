@@ -1,9 +1,9 @@
-let cdI = null;       
+let cdI = null;
 let originBox = null;
-let touchItem = null;   
+let touchItem = null;
 let offsetX = 0, offsetY = 0;
 
-document.querySelectorAll(".item").forEach(setupPerson);
+document.querySelectorAll(".item").forEach(person => setupPerson(person, person.textContent.trim()));
 
 document.querySelectorAll(".box").forEach(box => {
     box.ondragover = e => e.preventDefault();
@@ -31,10 +31,11 @@ function dragEnd() {
     cdI = null;
     originBox = null;
 }
-function setupPerson(person) {
-    person.ondragstart = dragStart;
-    person.ondragend = dragEnd;
 
+function setupPerson(person, name) {
+    person.innerHTML = '';
+    const textNode = document.createTextNode(name);
+    person.appendChild(textNode);
     const deleteBtn = document.createElement("button");
     deleteBtn.textContent = "✖";
     deleteBtn.classList.add("delete");
@@ -42,7 +43,9 @@ function setupPerson(person) {
         e.stopPropagation();
         person.remove();
     };
-    person.append(deleteBtn);
+    person.appendChild(deleteBtn);
+    person.ondragstart = dragStart;
+    person.ondragend = dragEnd;
     person.addEventListener("touchstart", e => {
         e.preventDefault();
         touchItem = person;
@@ -52,32 +55,25 @@ function setupPerson(person) {
         person.style.position = "absolute";
         person.style.zIndex = 1000;
     });
-
     person.addEventListener("touchmove", e => {
         e.preventDefault();
         if (!touchItem) return;
         touchItem.style.left = e.touches[0].clientX - offsetX + "px";
         touchItem.style.top = e.touches[0].clientY - offsetY + "px";
     });
-
     person.addEventListener("touchend", e => {
         if (!touchItem) return;
         touchItem.style.position = "static";
         touchItem.style.zIndex = "";
-
         const boxes = document.querySelectorAll(".box");
-        let dropped = false;
-
         boxes.forEach(box => {
             const rect = box.getBoundingClientRect();
             const x = e.changedTouches[0].clientX;
             const y = e.changedTouches[0].clientY;
-
             if (x >= rect.left && x <= rect.right &&
                 y >= rect.top && y <= rect.bottom) {
                 box.append(touchItem);
                 handleLabel(touchItem, box.id);
-                dropped = true;
             }
         });
         const parentId = touchItem.parentElement.id;
@@ -85,34 +81,31 @@ function setupPerson(person) {
             const tag = touchItem.querySelector(".tag");
             if (tag) tag.remove();
         }
-
         touchItem = null;
     });
 }
+
 function handleLabel(person, boxId) {
     if (boxId === "shop" || boxId === "house") {
         let label = prompt(boxId === "shop" ? "Shop?" : "House?");
         if (label && label.trim() !== "") addTag(person, label);
     }
 }
+
 function addTag(person, text) {
     let existing = person.querySelector(".tag");
     if (existing) existing.remove();
-
     const span = document.createElement("span");
     span.classList.add("tag");
-    span.textContent = `(${text})`;
-    person.append(span);
+    span.textContent = ` (${text})`;
+    person.appendChild(span);
 }
+
 function addPeople() {
     const name = prompt("Who would you like to add?");
     if (!name || name.trim() === "") return;
-
     const person = document.createElement("p");
     person.classList.add("item");
-    person.textContent = name;
-
-    setupPerson(person);
-    document.getElementById("unemployed").append(person);
+    setupPerson(person, name.trim());
+    document.getElementById("unemployed").appendChild(person);
 }
-
