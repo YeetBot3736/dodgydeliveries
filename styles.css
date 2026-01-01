@@ -30,6 +30,10 @@ body{
     margin: 1em;
     border-radius: 5px;
     cursor: grab;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 
@@ -57,4 +61,5 @@ body{
 p{
     margin: 1 em;
     border: 2px solid black;
+
 }
