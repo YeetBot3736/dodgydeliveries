@@ -1,8 +1,8 @@
 const allBoxes = document.querySelectorAll(".box");
 let draggedItem = null;
 let touchItem = null;
-let offsetX = 0;
-let offsetY = 0;
+let startX = 0;
+let startY = 0;
 
 document.querySelectorAll(".item").forEach(item => {
     setupPerson(item, item.textContent);
@@ -12,11 +12,12 @@ function setupPerson(person, name) {
     person.dataset.name = name;
     renderPerson(person);
 
+    person.draggable = true;
     person.ondragstart = dragStart;
     person.ondragend = dragEnd;
 
-    person.addEventListener("touchstart", touchStart);
-    person.addEventListener("touchmove", touchMove);
+    person.addEventListener("touchstart", touchStart, { passive: false });
+    person.addEventListener("touchmove", touchMove, { passive: false });
     person.addEventListener("touchend", touchEnd);
 }
 
@@ -44,20 +45,20 @@ function renderPerson(person) {
     person.appendChild(del);
 }
 
-function dragStart() {
+function dragStart(e) {
     draggedItem = this;
-    setTimeout(() => this.style.display = "none");
+    e.dataTransfer.setData("text/plain", "");
 }
 
 function dragEnd() {
-    this.style.display = "block";
     draggedItem = null;
 }
 
 allBoxes.forEach(box => {
     box.ondragover = e => e.preventDefault();
     box.ondrop = function () {
-        this.append(draggedItem);
+        if (!draggedItem) return;
+        this.appendChild(draggedItem);
         handleLabel(draggedItem, this.id);
     };
 });
@@ -78,11 +79,10 @@ function touchStart(e) {
     e.preventDefault();
     touchItem = this;
 
-    const touch = e.touches[0];
-    startX = touch.clientX;
-    startY = touch.clientY;
+    const t = e.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
 
-    touchItem.style.transition = "none";
     touchItem.style.zIndex = 1000;
 }
 
@@ -90,22 +90,21 @@ function touchMove(e) {
     if (!touchItem) return;
     e.preventDefault();
 
-    const touch = e.touches[0];
-    currentX = touch.clientX - startX;
-    currentY = touch.clientY - startY;
+    const t = e.touches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
 
-    touchItem.style.transform = `translate(${currentX}px, ${currentY}px)`;
+    touchItem.style.transform = `translate(${dx}px, ${dy}px)`;
 }
 
 function touchEnd(e) {
     if (!touchItem) return;
 
-    touchItem.style.transition = "";
-    touchItem.style.transform = "";
-    touchItem.style.zIndex = "";
-
     const x = e.changedTouches[0].clientX;
     const y = e.changedTouches[0].clientY;
+
+    touchItem.style.transform = "";
+    touchItem.style.zIndex = "";
 
     document.querySelectorAll(".box").forEach(box => {
         const r = box.getBoundingClientRect();
@@ -120,11 +119,10 @@ function touchEnd(e) {
 
 function addPeople() {
     const newName = prompt("Who would you like to add?");
-    if (!newName || newName.trim() === "") return;
+    if (!newName || !newName.trim()) return;
 
     const p = document.createElement("p");
     p.className = "item";
     setupPerson(p, newName.trim());
     document.getElementById("unemployed").appendChild(p);
 }
-
