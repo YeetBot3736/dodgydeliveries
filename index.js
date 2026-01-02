@@ -77,31 +77,38 @@ function handleLabel(person, boxId) {
 function touchStart(e) {
     e.preventDefault();
     touchItem = this;
-    const r = this.getBoundingClientRect();
-    offsetX = e.touches[0].clientX - r.left;
-    offsetY = e.touches[0].clientY - r.top;
-    this.style.position = "absolute";
-    this.style.zIndex = 1000;
+
+    const touch = e.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
+
+    touchItem.style.transition = "none";
+    touchItem.style.zIndex = 1000;
 }
 
 function touchMove(e) {
     if (!touchItem) return;
     e.preventDefault();
-    touchItem.style.left = e.touches[0].clientX - offsetX + "px";
-    touchItem.style.top = e.touches[0].clientY - offsetY + "px";
+
+    const touch = e.touches[0];
+    currentX = touch.clientX - startX;
+    currentY = touch.clientY - startY;
+
+    touchItem.style.transform = `translate(${currentX}px, ${currentY}px)`;
 }
 
 function touchEnd(e) {
     if (!touchItem) return;
 
-    touchItem.style.position = "static";
+    touchItem.style.transition = "";
+    touchItem.style.transform = "";
     touchItem.style.zIndex = "";
+
+    const x = e.changedTouches[0].clientX;
+    const y = e.changedTouches[0].clientY;
 
     document.querySelectorAll(".box").forEach(box => {
         const r = box.getBoundingClientRect();
-        const x = e.changedTouches[0].clientX;
-        const y = e.changedTouches[0].clientY;
-
         if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
             box.appendChild(touchItem);
             handleLabel(touchItem, box.id);
@@ -120,3 +127,4 @@ function addPeople() {
     setupPerson(p, newName.trim());
     document.getElementById("unemployed").appendChild(p);
 }
+
