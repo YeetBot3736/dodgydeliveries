@@ -46,6 +46,7 @@ function renderPerson(person) {
 }
 
 function dragStart(e) {
+    e.preventDefault();
     draggedItem = this;
     e.dataTransfer.setData("text/plain", "");
 }
@@ -126,3 +127,4 @@ function addPeople() {
     setupPerson(p, newName.trim());
     document.getElementById("unemployed").appendChild(p);
 }
+
