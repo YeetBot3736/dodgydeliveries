@@ -1,130 +1,78 @@
-const allBoxes = document.querySelectorAll(".box");
-let draggedItem = null;
-let touchItem = null;
-let startX = 0;
-let startY = 0;
+const allItems = document.querySelectorAll('p');
+const allBoxes = document.querySelectorAll('.box');
+let cdI = null;
+let originBox = null;
 
-document.querySelectorAll(".item").forEach(item => {
-    setupPerson(item, item.textContent);
-});
+allItems.forEach(item => {
+    item.ondragstart = dragStart
+    item.ondragend = dragEnd
+    setupPerson(item);
+})
 
-function setupPerson(person, name) {
-    person.dataset.name = name;
-    renderPerson(person);
+allBoxes.forEach(box => {
+    box.ondragover = (e) => e.preventDefault();
+    box.ondrop = function(){
+        this.append(cdI);
+        if (this.id === "shop" || this.id === "house") {
+            let label = prompt(this.id === "shop" ? "Shop?" : "House?");
+            if (label && label.trim() !== "") {
+                addTag(cdI, label);
+            }
+        }
+    }
+})
 
-    person.draggable = true;
+function addTag(person, text) {
+    let existing = person.querySelector(".tag");
+    if (existing) existing.remove();
+
+    const span = document.createElement("span");
+    span.classList.add("tag");
+    span.textContent = `(${text})`;
+    person.append(span);
+}
+
+
+function dragStart(){
+    cdI = this
+    originBox = this.getParentElement;
+    setTimeout(() => this.style.display = 'none')
+}
+function dragEnd(){
+    setTimeout(() => this.style.display = 'block')
+    const parentId = this.parentElement.id;
+    if (parentId !== "shop" && parentId !== "house") {
+        const tag = this.querySelector(".tag");
+        if (tag) tag.remove();
+    }
+    cdI = null
+    originBox = null;
+}
+
+function setupPerson(person) {
     person.ondragstart = dragStart;
     person.ondragend = dragEnd;
 
-    person.addEventListener("touchstart", touchStart, { passive: false });
-    person.addEventListener("touchmove", touchMove, { passive: false });
-    person.addEventListener("touchend", touchEnd);
-}
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "x";
+    deleteBtn.classList.add("delete");
 
-function renderPerson(person) {
-    person.innerHTML = "";
-
-    const text = document.createTextNode(person.dataset.name);
-    person.appendChild(text);
-
-    if (person.dataset.tag) {
-        const span = document.createElement("span");
-        span.className = "tag";
-        span.textContent = ` (${person.dataset.tag})`;
-        person.appendChild(span);
-    }
-
-    const del = document.createElement("button");
-    del.className = "delete";
-    del.textContent = "✖";
-    del.onclick = e => {
-        e.stopPropagation();
+    deleteBtn.onclick = function (e) {
+        e.stopPropagation(); 
         person.remove();
     };
 
-    person.appendChild(del);
+    person.append(deleteBtn);
 }
 
-function dragStart(e) {
-    e.preventDefault();
-    draggedItem = this;
-    e.dataTransfer.setData("text/plain", "");
-}
-
-function dragEnd() {
-    draggedItem = null;
-}
-
-allBoxes.forEach(box => {
-    box.ondragover = e => e.preventDefault();
-    box.ondrop = function () {
-        if (!draggedItem) return;
-        this.appendChild(draggedItem);
-        handleLabel(draggedItem, this.id);
-    };
-});
-
-function handleLabel(person, boxId) {
-    if (boxId === "shop" || boxId === "house") {
-        const label = prompt(boxId === "shop" ? "Shop?" : "House?");
-        if (label && label.trim() !== "") {
-            person.dataset.tag = label;
-        }
-    } else {
-        delete person.dataset.tag;
-    }
-    renderPerson(person);
-}
-
-function touchStart(e) {
-    e.preventDefault();
-    touchItem = this;
-
-    const t = e.touches[0];
-    startX = t.clientX;
-    startY = t.clientY;
-
-    touchItem.style.zIndex = 1000;
-}
-
-function touchMove(e) {
-    if (!touchItem) return;
-    e.preventDefault();
-
-    const t = e.touches[0];
-    const dx = t.clientX - startX;
-    const dy = t.clientY - startY;
-
-    touchItem.style.transform = `translate(${dx}px, ${dy}px)`;
-}
-
-function touchEnd(e) {
-    if (!touchItem) return;
-
-    const x = e.changedTouches[0].clientX;
-    const y = e.changedTouches[0].clientY;
-
-    touchItem.style.transform = "";
-    touchItem.style.zIndex = "";
-
-    document.querySelectorAll(".box").forEach(box => {
-        const r = box.getBoundingClientRect();
-        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
-            box.appendChild(touchItem);
-            handleLabel(touchItem, box.id);
-        }
-    });
-
-    touchItem = null;
-}
-
-function addPeople() {
-    const newName = prompt("Who would you like to add?");
-    if (!newName || !newName.trim()) return;
-
-    const p = document.createElement("p");
-    p.className = "item";
-    setupPerson(p, newName.trim());
-    document.getElementById("unemployed").appendChild(p);
+function addPeople(){
+    var newName = prompt("Who would you like to add?")
+    if(newName.trim() === "") return;
+    const newPerson = document.createElement("p");
+    newPerson.textContent = newName;
+    newPerson.classList.add("item");
+    newPerson.setAttribute("draggable", "true");
+    setupPerson(newPerson);
+    unemployed.append(newPerson);
 }
 
